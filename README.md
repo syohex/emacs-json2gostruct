@@ -1,4 +1,4 @@
-# json2gostruct.el
+# json2gostruct.el [![travis badge][travis-badge]][travis-link]
 
 Convert JSON to golang struct definition
 
@@ -11,3 +11,6 @@ Convert JSON to golang struct definition
 #### `M-x json2gostruct`
 
 Convert JSON of current buffer and generate golang struct definition corresponding to it.
+
+[travis-badge]: https://travis-ci.org/syohex/emacs-json2gostruct.svg
+[travis-link]: https://travis-ci.org/syohex/emacs-json2gostruct
