@@ -35,14 +35,11 @@
 (ert-deftest encode ()
   "Encoding json to go struct"
   (let ((input "{
-\"a\": [1,2,3],
-\"b\": [{\"name\": \"tom\", \"age\": 10}]
+\"b\": [{\"name\": \"tom\"}]
 }")
         (expect "type Test struct {
-\ta []int `json:\"a\"`
 \tb []struct {
 \t\tname string `json:\"name\"`
-\t\tage int `json:\"age\"`
 \t} `json:\"b\"`
 }
 "))
