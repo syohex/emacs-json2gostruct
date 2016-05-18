@@ -29,13 +29,28 @@
 (require 'json)
 (require 'cl-lib)
 
+(defun json2gostruct--boolean-p (v)
+  (or (eq v t) (not v)))
+
+(defun json2gostruct--eltype-to-gotype (val)
+  (cl-case (type-of val)
+    (string 'string)
+    (integer 'int)
+    (float 'float64)
+    (cons 'cons)
+    (symbol (if (json2gostruct--boolean-p val)
+                'boolean
+              (error "Invalid input %s" val)))
+    (otherwise (error "Unsupported type '%s'" (type-of val)))))
+
 (defun json2gostruct--vector-type (v)
   (if (zerop (length v))
       'string
     (let ((first-type (type-of (aref v 0))))
-      (or (and (cl-every (lambda (a) (eq (type-of a) first-type)) v)
-               first-type)
-          'string))))
+      (cond ((cl-every #'json2gostruct--boolean-p v) 'boolean)
+            ((cl-every (lambda (a) (eq (type-of a) first-type)) v)
+             (json2gostruct--eltype-to-gotype (aref v 0)))
+            (t 'string)))))
 
 (defun json2gostruct--encode-element (json name nest)
   (cl-loop with ret = nil
@@ -45,18 +60,14 @@
            do
            (let ((varname (concat indent (symbol-name key) " "))
                  (type (cl-typecase val
-                         (string "string")
-                         (integer "int")
-                         (float "float64")
                          (vector (let ((type (json2gostruct--vector-type val)))
                                    (format "[]%s"
                                            (if (eq type 'cons)
                                                (json2gostruct--encode (aref val 0) name nest)
                                              (symbol-name type)))))
-                         (symbol (if (or (eq val t) (not val))
-                                     "boolean"
-                                   (error "Invalid input %s" val)))
-                         (cons (json2gostruct--encode val name nest)))))
+                         (cons (json2gostruct--encode val name nest))
+                         (otherwise
+                          (symbol-name (json2gostruct--eltype-to-gotype val))))))
              (let ((tag (format " `json:\"%s\"`" key)))
                (push (concat varname type tag) ret)))
            finally return ret))
